@@ -8,8 +8,8 @@ tcp_port = 9110
 http_port = 8223
 
 [flash]
-tidb_status_addr = "tidb:10080"
-service_addr = "tiflash:4030"
+tidb_status_addr = "tidb:10080,tidb1:10080,tidb2:10080"
+service_addr = "tiflash:3930"
 
 [flash.flash_cluster]
 cluster_manager_path = "/tiflash/flash_cluster_manager"
@@ -19,23 +19,22 @@ refresh_interval = 20
 update_rule_interval = 5
 
 [flash.proxy]
-config = "/tiflash-learner.toml"
+addr = "0.0.0.0:20170"
+advertise-addr = "tiflash:20170"
+advertise-status-addr = "tiflash:20181"
+status-addr = "0.0.0.0:20181"
+config = "/proxy.toml"
+
 
 [status]
 metrics_port = 8234
 
-[logger]
-errorlog = "/logs/tiflash_error.log"
-log = "/logs/tiflash.log"
-count = 20
-level = "debug"
-size = "1000M"
 
 [application]
 runAsDaemon = true
 
 [raft]
-pd_addr = "pd0:2379"
+pd_addr = "pd:2379,pd1:2379,pd2:2379"
 storage_engine = "tmt"
 
 [quotas]
@@ -68,12 +67,13 @@ quota = "default"
 [users.readonly.networks]
 ip = "::/0"
 
-[profiles]
 
-[profiles.default]
-load_balancing = "random"
-max_memory_usage = 10000000000
-use_uncompressed_cache = 0
 
-[profiles.readonly]
-readonly = 1
+[metric]
+# the Prometheus client push interval. Setting the value to 0s stops Prometheus client from pushing.
+interval = "15s"
+# the Prometheus pushgateway address. Leaving it empty stops Prometheus client from pushing.
+address = "pushgateway:9091"
+# the Prometheus client push job name. Note: A node id will automatically append, e.g., "tikv_1".
+job = "tiflash"
+

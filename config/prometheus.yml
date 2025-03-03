@@ -9,7 +9,30 @@ scrape_configs:
       - targets: ['pushgateway:9091']
         labels:
           cluster: 'tidb-cluster'
+      - targets: ['tiflash:8234']
+        labels:
+          cluster: 'tidb-cluster'
+
+      - targets: ['tikv:20180']
+        labels:
+          cluster: 'tidb-cluster'
+
+      - targets: ['pd:2379']
+        labels:
+          cluster: 'tidb-cluster'
+
+  - job_name: 'tiproxy'
+    scrape_interval: 5s
+    honor_labels: true
+    metrics_path: '/metrics/'     
+    static_configs:
+      - targets: ['tiproxy:3080']
+        labels:
+          cluster: 'tidb-cluster'
+
+
 rule_files:
   - 'pd.rules.yml'
   - 'tikv.rules.yml'
   - 'tidb.rules.yml'
+  - 'tiflash.rules.yml'

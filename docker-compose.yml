@@ -1,186 +1,239 @@
-version: '2.1'
-
+version: '3.8'
 services:
-  pd0:
-    image: pingcap/pd:latest
+  pd:
+    image: pingcap/pd:v8.5.0
     ports:
-      - "2379"
+      - "2379:2379"
+      - "2380:2380"
     volumes:
-      - ./config/pd.toml:/pd.toml:ro
-      - ./data:/data
-      - ./logs:/logs
+      - ./config/pd-nightly-tiflash.toml:/pd.toml
+      - pd_data:/data
+      - ./certs:/certs
     command:
-      - --name=pd0
+      - --name=pd
       - --client-urls=http://0.0.0.0:2379
       - --peer-urls=http://0.0.0.0:2380
-      - --advertise-client-urls=http://pd0:2379
-      - --advertise-peer-urls=http://pd0:2380
-      - --initial-cluster=pd0=http://pd0:2380,pd1=http://pd1:2380,pd2=http://pd2:2380
-      - --data-dir=/data/pd0
+      - --advertise-client-urls=http://pd:2379
+      - --advertise-peer-urls=http://pd:2380
+      - --initial-cluster=pd=http://pd:2380,pd1=http://pd1:2380,pd2=http://pd2:2380
+      - --data-dir=/data
       - --config=/pd.toml
-      - --log-file=/logs/pd0.log
-    restart: on-failure
+
+    restart: always
+
   pd1:
-    image: pingcap/pd:latest
-    ports:
-      - "2379"
+    image: pingcap/pd:v8.5.0
     volumes:
-      - ./config/pd.toml:/pd.toml:ro
-      - ./data:/data
-      - ./logs:/logs
+      - ./config/pd-nightly-tiflash.toml:/pd.toml
+      - pd1_data:/data
+      - ./certs:/certs
     command:
       - --name=pd1
       - --client-urls=http://0.0.0.0:2379
       - --peer-urls=http://0.0.0.0:2380
       - --advertise-client-urls=http://pd1:2379
       - --advertise-peer-urls=http://pd1:2380
-      - --initial-cluster=pd0=http://pd0:2380,pd1=http://pd1:2380,pd2=http://pd2:2380
-      - --data-dir=/data/pd1
+      - --initial-cluster=pd=http://pd:2380,pd1=http://pd1:2380,pd2=http://pd2:2380
+      - --data-dir=/data
       - --config=/pd.toml
-      - --log-file=/logs/pd1.log
-    restart: on-failure
+
+    restart: always
+
   pd2:
-    image: pingcap/pd:latest
-    ports:
-      - "2379"
+    image: pingcap/pd:v8.5.0
     volumes:
-      - ./config/pd.toml:/pd.toml:ro
-      - ./data:/data
-      - ./logs:/logs
+      - ./config/pd-nightly-tiflash.toml:/pd.toml
+      - pd2_data:/data
+      - ./certs:/certs
     command:
       - --name=pd2
       - --client-urls=http://0.0.0.0:2379
       - --peer-urls=http://0.0.0.0:2380
       - --advertise-client-urls=http://pd2:2379
       - --advertise-peer-urls=http://pd2:2380
-      - --initial-cluster=pd0=http://pd0:2380,pd1=http://pd1:2380,pd2=http://pd2:2380
-      - --data-dir=/data/pd2
+      - --initial-cluster=pd=http://pd:2380,pd1=http://pd1:2380,pd2=http://pd2:2380
+      - --data-dir=/data
       - --config=/pd.toml
-      - --log-file=/logs/pd2.log
-    restart: on-failure
-  tikv0:
-    image: pingcap/tikv:latest
+
+    restart: always
+
+  tikv:
+    image: pingcap/tikv:v8.5.0
+    ports:
+      - "20160:20160"
     volumes:
+      - tikv_data:/data
+      - ./certs:/certs
       - ./config/tikv.toml:/tikv.toml:ro
-      - ./data:/data
-      - ./logs:/logs
     command:
       - --addr=0.0.0.0:20160
-      - --advertise-addr=tikv0:20160
-      - --data-dir=/data/tikv0
-      - --pd=pd0:2379,pd1:2379,pd2:2379
+      - --advertise-addr=tikv:20160
+      - --status-addr=0.0.0.0:20180
+      - --pd=pd:2379,pd1:2379,pd2:2379
+      - --data-dir=/data
       - --config=/tikv.toml
-      - --log-file=/logs/tikv0.log
     depends_on:
-      - "pd0"
-      - "pd1"
-      - "pd2"
-    restart: on-failure
+      - pd
+    restart: always
+
+
   tikv1:
-    image: pingcap/tikv:latest
+    image: pingcap/tikv:v8.5.0
     volumes:
+      - tikv1_data:/data
+      - ./certs:/certs
       - ./config/tikv.toml:/tikv.toml:ro
-      - ./data:/data
-      - ./logs:/logs
     command:
       - --addr=0.0.0.0:20160
       - --advertise-addr=tikv1:20160
-      - --data-dir=/data/tikv1
-      - --pd=pd0:2379,pd1:2379,pd2:2379
+      - --status-addr=0.0.0.0:20180
+      - --pd=pd1:2379,pd:2379,pd2:2379
+      - --data-dir=/data
       - --config=/tikv.toml
-      - --log-file=/logs/tikv1.log
     depends_on:
-      - "pd0"
-      - "pd1"
-      - "pd2"
-    restart: on-failure
+      - pd1
+    restart: always
+
   tikv2:
-    image: pingcap/tikv:latest
+    image: pingcap/tikv:v8.5.0
     volumes:
+      - tikv2_data:/data
+      - ./certs:/certs
       - ./config/tikv.toml:/tikv.toml:ro
-      - ./data:/data
-      - ./logs:/logs
     command:
       - --addr=0.0.0.0:20160
       - --advertise-addr=tikv2:20160
-      - --data-dir=/data/tikv2
-      - --pd=pd0:2379,pd1:2379,pd2:2379
+      - --status-addr=0.0.0.0:20180
+      - --pd=pd2:2379,pd:2379,pd1:2379
+      - --data-dir=/data
       - --config=/tikv.toml
-      - --log-file=/logs/tikv2.log
+  
     depends_on:
-      - "pd0"
-      - "pd1"
-      - "pd2"
-    restart: on-failure
-
+      - pd2
+    restart: always
   tidb:
-    image: pingcap/tidb:latest
+    image: pingcap/tidb:v8.5.0
     ports:
       - "4000:4000"
       - "10080:10080"
-    volumes:
-      - ./config/tidb.toml:/tidb.toml:ro
-      - ./logs:/logs
     command:
+      - --status=10080
       - --store=tikv
-      - --path=pd0:2379,pd1:2379,pd2:2379
-      - --config=/tidb.toml
-      - --log-file=/logs/tidb.log
+      - --path=pd:2379,pd1:2379,pd2:2379
       - --advertise-address=tidb
-    depends_on:
-      - "tikv0"
-      - "tikv1"
-      - "tikv2"
-    restart: on-failure
-  tispark-master:
-    image: pingcap/tispark:v2.1.1
-    command:
-      - /opt/spark/sbin/start-master.sh
+      - --metrics-addr=pushgateway:9091
+      - --config=/tidb.toml
     volumes:
-      - ./config/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
-    environment:
-      SPARK_MASTER_PORT: 7077
-      SPARK_MASTER_WEBUI_PORT: 8080
-    ports:
-      - "7077:7077"
-      - "8080:8080"
+      - ./certs:/certs
+      - ./config/tidb.toml:/tidb.toml:ro
     depends_on:
-      - "tikv0"
-      - "tikv1"
-      - "tikv2"
-    restart: on-failure
-  tispark-slave0:
-    image: pingcap/tispark:v2.1.1
+      - tikv
+      - tikv1
+      - tikv2
+    restart: always
+
+  tidb1:
+    image: pingcap/tidb:v8.5.0
     command:
-      - /opt/spark/sbin/start-slave.sh
-      - spark://tispark-master:7077
+      - --status=10080
+      - --store=tikv
+      - --path=pd:2379,pd1:2379,pd2:2379
+      - --advertise-address=tidb1
+      - --metrics-addr=pushgateway:9091
+      - --config=/tidb.toml
     volumes:
-      - ./config/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
-    environment:
-      SPARK_WORKER_WEBUI_PORT: 38081
-    ports:
-      - "38081:38081"
+      - ./certs:/certs
+      - ./config/tidb.toml:/tidb.toml:ro
     depends_on:
-      - tispark-master
-    restart: on-failure
+      - tikv
+      - tikv1
+      - tikv2
+    restart: always
+    
+  tidb2:
+    image: pingcap/tidb:v8.5.0
+    command:
+      - --status=10080
+      - --store=tikv
+      - --path=pd:2379,pd1:2379,pd2:2379
+      - --advertise-address=tidb2
+      - --metrics-addr=pushgateway:9091
+      - --config=/tidb.toml
+    volumes:
+      - ./certs:/certs
+      - ./config/tidb.toml:/tidb.toml:ro
+    depends_on:
+      - tikv
+      - tikv1
+      - tikv2
+    restart: always
+    
 
-  tidb-vision:
-    image: pingcap/tidb-vision:latest
-    environment:
-      PD_ENDPOINT: pd0:2379
+
+  tiflash:
+    image: pingcap/tiflash:v8.5.0
     ports:
-      - "8010:8010"
-    restart: on-failure
+      - "3930:3930"   # TiFlash service port
+      - "20170:20170" # TiFlash proxy port
+      - "20181:20181" # TiFlash proxy status port
+      - "9000:9000"   # MPP port
+      - "8123:8123"   # HTTP port
 
-  # monitors
+    cap_add:
+      - SYS_NICE
+    volumes:
+      - ./config/tiflash-nightly.toml:/tiflash.toml:ro
+      - ./config/tiflash-learner-nightly.toml:/proxy.toml:ro
+      - ./tiflash_data:/data 
+      - ./logs:/logs
+      - ./certs:/certs
+    command:
+      - --config=/tiflash.toml  
+ 
+
+  tiproxy:
+    image: abhishek26102001/tiproxy:v1
+    ports:
+      - "6000:6000"
+      - "3080:3080"
+
+    volumes:
+      - ./config/proxy.toml:/proxy.toml:ro
+      - ./certs:/certs
+    command:
+      - --config=/proxy.toml
+
+      
+    depends_on:
+      - tidb
+      - tidb1
+      - tidb2
+    restart: always
+
+
+  ngmonitoring:
+    image: pingcap/ng-monitoring:v8.5.0
+    ports:
+      - "12020:12020"   
+    volumes:
+      - ./config/ng-monitor.toml:/ng-monitor.toml:ro
+      - ./data:/data
+    command:
+      - --config=/ng-monitor.toml  
+
+    depends_on:
+      - tikv
+      - tidb
+    restart: always
+
   pushgateway:
-    image: prom/pushgateway:v0.3.1
+    image: prom/pushgateway:latest
     command:
       - --log.level=error
     restart: on-failure
   prometheus:
     user: root
-    image: prom/prometheus:v2.2.1
+    image: prom/prometheus:latest
     command:
       - --log.level=error
       - --storage.tsdb.path=/data/prometheus
@@ -208,3 +261,12 @@ services:
     ports:
       - "3000:3000"
     restart: on-failure
+
+volumes:
+  pd_data:
+  pd1_data:
+  pd2_data:
+  tikv_data:
+  tikv1_data:
+  tikv2_data:
+  tiflash_data:

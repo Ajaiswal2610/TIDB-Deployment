@@ -1,18 +1,18 @@
-[storage]
-reserve-space = "0MB"
+advertise-addr = "tiproxy:6000"
+[proxy]
+addr = "0.0.0.0:6000"
+max-connections = 0
+pd-addrs = "pd:2379,pd1:2379,pd2:2379"
 
-[rocksdb]
-max-open-files = 4096
+[api]
+addr = "0.0.0.0:3080"
 
-[raftdb]
-max-open-files = 4096
 
-[log]
-level = "info"
-
-[server]
-grpc-compression-type = "none"
-
+[security]
+    [sql-tls]
+    skip-ca = true
+    [server-tls]
+    auto-certs = true
 
 
 [metric]
@@ -21,6 +21,4 @@ interval = "15s"
 # the Prometheus pushgateway address. Leaving it empty stops Prometheus client from pushing.
 address = "pushgateway:9091"
 # the Prometheus client push job name. Note: A node id will automatically append, e.g., "tikv_1".
-job = "tikv"
-
-
+job = "tiproxy"
