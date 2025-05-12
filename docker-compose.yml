@@ -1,5 +1,12 @@
 version: '3.8'
 services:
+
+  tidb-br:
+    image: abhishek26102001/br:latest
+    command: /bin/bash -c "sleep infinity"
+    network_mode: "host"
+    restart: always
+
   pd:
     image: pingcap/pd:v8.5.0
     ports:
