@@ -4,7 +4,6 @@ services:
   tidb-br:
     image: abhishek26102001/br:latest
     command: /bin/bash -c "sleep infinity"
-    network_mode: "host"
     restart: always
 
   pd:
