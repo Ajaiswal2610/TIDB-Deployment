@@ -163,3 +163,5 @@ docker-compose logs <service-name>
 - [TiDB Documentation](https://docs.pingcap.com/tidb/stable)
 - [TiDB Architecture](https://docs.pingcap.com/tidb/stable/architecture)
 - [PingCAP Blog](https://pingcap.com/blog)
+
+Its a fork of https://github.com/pingcap/tidb-docker-compose with updated configs, docker images , and minor fixes.
